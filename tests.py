@@ -289,6 +289,20 @@ class test_hay_pieza_enemiga_mas_debil_hacia(unittest.TestCase):
             ])
         self.assertTrue(hay_pieza_enemiga_mas_debil_hacia(t, Posicion(1, 3), OESTE))
 
+    def test_hay_pieza_enemiga_mas_debil_hacia(self):
+        t = leer_tablero([
+              '--Hdm---', #7
+              'r--HhC--', #6
+              'e---R-C-', #5
+              'ME--d---', #4
+              'h--RDcRr', #3
+              'R-R-r--r', #2
+              '-RRcrRD-', #1
+              '--r---rr', #0
+              #01234567
+            ])
+        self.assertFalse(hay_pieza_enemiga_mas_debil_hacia(t, Posicion(7, 2), NORTE))
+
 class test_hay_pieza_enemiga_mas_fuerte_vecina(unittest.TestCase):
 
     def test_hay_pieza_enemiga_mas_fuerte_vecina(self):
@@ -354,6 +368,22 @@ class test_puede_realizar_movimiento(unittest.TestCase):
         j = Juego(t, PLATEADO, 0)
         m = Movimiento(MOVER_A_SECAS, Posicion(0, 1), [NORTE])
         self.assertTrue(puede_realizar_movimiento(j, m))
+
+    def test_mover_a_secas_casilla_vacia(self):
+        t = leer_tablero([
+              '--eMr---', #7
+              '--------', #6
+              '-R----r-', #5
+              '--------', #4
+              '--mMd---', #3
+              '---D----', #2
+              '--------', #1
+              '-mD--mDR', #0
+              #01234567
+            ])
+        j = Juego(t, PLATEADO, 0)
+        m = Movimiento(MOVER_A_SECAS, Posicion(0, 0), [NORTE])
+        self.assertFalse(puede_realizar_movimiento(j, m))
 
     def test_mover_a_secas_congelada(self):
         t = leer_tablero([

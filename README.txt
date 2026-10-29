@@ -11,12 +11,12 @@
 
 3) Para evaluar el cubrimiento del código por los casos de test:
 
-  python -m coverage run --include arimaa.py --branch -m unittest tests.py
-  python -m coverage json
-  python cubrimiento.py
+  python3 -m coverage run --include arimaa.py --branch -m unittest tests.py
+  python3 -m coverage json
+  python3 cubrimiento.py
 
 4) Para correr la interfaz gráfica:
-      python interfaz.py
+      python3 interfaz.py
   
   Para cargar el tablero desde el archivo especificado, se le puede pasar
   como parámetro un nombre de archivo (p.ej. "tablero.txt").

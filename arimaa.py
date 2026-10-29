@@ -22,16 +22,6 @@ def pasar_turno(j : Juego) -> Juego: # pragma: no cover
 
 #auxiliares
 
-def opuesta(d: Direccion) -> Direccion:
-    res = ESTE
-    if d == NORTE:
-        res = SUR
-    elif d == SUR:
-        res = NORTE
-    elif d == ESTE:
-        res = OESTE
-    return res
-
 def hay_figura_de_color(t : Tablero, pos : Posicion, f : Figura, col : Color) -> bool:
     return not hay_casilla_vacia(t, pos) and t[pos.fila][pos.columna].figura == f and t[pos.fila][pos.columna].color == col
 
@@ -51,7 +41,7 @@ def tablero_bien_formado(t: Tablero) -> bool:
         True si el tablero tiene ALTO filas y cada fila tiene ANCHO columnas, y False si no.
     """
 
-    res :int = len(t) == ALTO
+    res :bool = len(t) == ALTO
     for fila in t:
         if len(fila) != ANCHO:
             res = False
@@ -171,7 +161,7 @@ def hay_pieza_de_color(t : Tablero, pos : Posicion, col : Color) -> bool:
         True si *pos* está dentro del tablero, la casilla no está vacía y la pieza es del color *col*, y False en caso contrario.
 
     """
-    pieza : Pieza = t[pos.fila][pos.columna]
+    pieza:(Pieza | CasillaVacia) = t[pos.fila][pos.columna]
 
     return posicion_en_tablero(pos) and (not hay_casilla_vacia(t, pos)) and pieza.color == col
     
@@ -188,13 +178,13 @@ def hay_pieza_enemiga_mas_fuerte_hacia(t : Tablero, pos : Posicion, d : Direccio
     Returns:
         True si en la posición vecina hacia *d* hay una pieza enemiga más fuerte que la ubicada en *pos*, y False en cualquier otro caso.
     """
-    pieza : Pieza = t[pos.fila][pos.columna]
+    pieza : (Pieza | CasillaVacia) = t[pos.fila][pos.columna]
     pos2 : Posicion = posicion_vecina_hacia(pos, d)
     
     if not posicion_en_tablero(pos2):
         return False
 
-    pieza2 : Pieza = t[pos2.fila][pos2.columna]
+    pieza2 : (Pieza | CasillaVacia) = t[pos2.fila][pos2.columna]
     return pieza != VACIA and pieza2 != VACIA and hay_pieza_de_color(t, pos2, oponente(pieza.color)) and fuerza(pieza2.figura) > fuerza(pieza.figura)
 
 
@@ -260,13 +250,13 @@ def hay_pieza_enemiga_mas_debil_hacia(t : Tablero, pos : Posicion, d : Direccion
     Returns:
         True si en la posición vecina hacia la dirección indicada hay una pieza enemiga más débil que la ubicada en pos, y False en caso contrario.
     """
-    pieza : Pieza = t[pos.fila][pos.columna]
+    pieza : (Pieza | CasillaVacia) = t[pos.fila][pos.columna]
     pos2 : Posicion = posicion_vecina_hacia(pos, d)
 
     if not posicion_en_tablero(pos2):
         return False
 
-    pieza2 : Pieza = t[pos2.fila][pos2.columna] 
+    pieza2 : (Pieza | CasillaVacia) = t[pos2.fila][pos2.columna] 
     return pieza != VACIA and pieza2 != VACIA and hay_pieza_de_color(t, pos2, oponente(pieza.color)) and fuerza(pieza2.figura) < fuerza(pieza.figura)
 
 def hay_pieza_enemiga_mas_fuerte_vecina(t : Tablero, pos : Posicion) -> bool:
@@ -320,17 +310,14 @@ def puede_realizar_movimiento(j : Juego, m : Movimiento) -> bool:
     return hay_pieza_de_color(j.tablero, m.origen, j.turno) and not hay_pieza_congelada(j.tablero, m.origen) and direccion_de_movimiento_habilitada(j.tablero, m.origen, m.pasos[0]) and j.pasos_consumidos + len(m.pasos) <= MAX_PASOS and puede_realizar_accion(j.tablero, m)
 
 def direccion_de_movimiento_habilitada(t: Tablero, pos: Posicion, d: Direccion) -> bool:
-    pieza: Pieza = t[pos.fila][pos.columna]
+    pieza: (Pieza | CasillaVacia) = t[pos.fila][pos.columna]
     res:bool = True
 
-    if not hay_casilla_vacia(t, pos):
-        if pieza.figura == CONEJO and pieza.color == DORADO:
-            res = d != SUR
+    if pieza.figura == CONEJO and pieza.color == DORADO:
+        res = d != SUR
 
-        elif pieza.figura == CONEJO and pieza.color == PLATEADO:
-            res = d != NORTE
-    else:
-        res = False
+    elif pieza.figura == CONEJO and pieza.color == PLATEADO:
+        res = d != NORTE
 
     return res
 
@@ -507,9 +494,9 @@ def realizar_movimiento(j : Juego, m : Movimiento) -> Juego:
     """
     nuevoJ : Juego = Juego(nuevoT(j.tablero), j.turno, j.pasos_consumidos)
 
-    nuevoJ : Juego = efectuandoTrampas(nuevoJ, m)
+    nuevoJ = efectuandoTrampas(nuevoJ, m)
 
-    nuevoJ : Juego = Juego(
+    nuevoJ = Juego(
         nuevoJ.tablero,
         nuevoJ.turno,
         nuevoJ.pasos_consumidos + len(m.pasos)
@@ -668,7 +655,7 @@ def hay_ganador_determinado(j : Juego) -> bool:
 
     return es_jugador_ganador(j, PLATEADO) or es_jugador_ganador(j, DORADO)
 
-def ganador_del_juego(j: Juego) -> Color:
+def ganador_del_juego(j: Juego) -> ( Color | None ):
     """
     Determina el ganador del juego, si existe uno único.
 
@@ -684,11 +671,10 @@ def ganador_del_juego(j: Juego) -> Color:
     gana_plateado = es_jugador_ganador(j, PLATEADO)
     gana_dorado = es_jugador_ganador(j, DORADO)
 
-    if gana_plateado and gana_dorado:
-        return None
-    elif gana_plateado:
+    if gana_plateado:
         return PLATEADO
-    elif gana_dorado:
+    
+    if gana_dorado:
         return DORADO
 
     return None
